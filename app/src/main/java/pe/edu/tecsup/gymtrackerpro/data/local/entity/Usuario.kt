@@ -2,7 +2,7 @@ package pe.edu.tecsup.gymtrackerpro.data.local.entity
 
 import androidx.room.*
 
-@Entity
+@Entity (tableName = "Usuario")
 data class Usuario(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "nombre_usuario") val nombreUsuario: String,
