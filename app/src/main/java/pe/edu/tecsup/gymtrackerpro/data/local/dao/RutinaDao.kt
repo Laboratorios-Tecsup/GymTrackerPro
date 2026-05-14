@@ -26,13 +26,9 @@ interface RutinaDao {
     @Query("SELECT * FROM Rutina WHERE id = :rutinaId")
     suspend fun buscarPorId(rutinaId: Int): Rutina?
 
-    @Query("SELECT * FROM Rutina WHERE usuario_id = :usuarioId")
+    @Query("SELECT COUNT(*) FROM Rutina WHERE usuario_id = :usuarioId")
     suspend fun contarRutinasPorUsuario(usuarioId: Int): Int
 
-    @Query("SELECT SUM(peso_kg *series * repeticiones ) FROM Rutina WHERE usuario_id = :usuarioId")
-    suspend fun volumenTotal(usuarioId: Int): Double
-
-
-
-
+    @Query("SELECT SUM(peso_kg * series * repeticiones) FROM Rutina WHERE usuario_id = :usuarioId")
+    suspend fun volumenTotal(usuarioId: Int): Double?
 }
