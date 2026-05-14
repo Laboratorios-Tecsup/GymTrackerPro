@@ -1,4 +1,4 @@
-package pe.edu.tecsup.gymtrackerpro.data.local.dao
+package pe.edu.tecsup.gymtrackerpro.data.local.entity
 
 import androidx.room.*
 
