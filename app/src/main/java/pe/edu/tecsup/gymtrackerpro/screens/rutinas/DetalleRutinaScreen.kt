@@ -218,10 +218,16 @@ fun DetalleRutinaScreen(navController: NavController, rutinaId: Int) {
 
             // Fecha
             Text("Fecha", fontWeight = FontWeight.Medium)
+
             OutlinedTextField(
                 value = fecha,
-                onValueChange = {},
-                readOnly = true,
+                onValueChange = {
+                    fecha = it
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number
+                ),
                 trailingIcon = {
                     Icon(Icons.Default.DateRange, contentDescription = null)
                 },
