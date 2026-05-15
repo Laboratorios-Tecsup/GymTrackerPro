@@ -35,6 +35,7 @@ fun PerfilUsuarioScreen(navController: NavController, usuarioId: Int) {
     var fechaRegistro by remember { mutableStateOf("") }
     var totalRutinas by remember { mutableStateOf(0L) }
     var volumenTotal by remember { mutableStateOf(0.0) }
+    var genero by remember { mutableStateOf("") }
 
     // Cargar datos del usuario y estadísticas
     LaunchedEffect(usuarioId) {
@@ -45,6 +46,7 @@ fun PerfilUsuarioScreen(navController: NavController, usuarioId: Int) {
             email = it.email
             edad = it.edad
             fechaRegistro = it.fechaRegistro
+            genero = it.genero
         }
         // Corregido: Nombres de funciones coinciden con RutinaDao
         totalRutinas = db.rutinaDao().contarRutinasPorUsuario(usuarioId).toLong()
@@ -161,6 +163,11 @@ fun PerfilUsuarioScreen(navController: NavController, usuarioId: Int) {
                         icon = Icons.Default.DateRange,
                         etiqueta = "Miembro desde",
                         valor = fechaRegistro
+                    )
+                    InfoItem(
+                        icon = Icons.Default.DateRange,
+                        etiqueta = "Genero",
+                        valor = genero
                     )
                 }
             }

@@ -10,5 +10,6 @@ data class Usuario(
     @ColumnInfo(name = "nombre_completo") val nombreCompleto: String = "",
     @ColumnInfo(name = "email") val email: String = "",
     @ColumnInfo(name = "edad") val edad: Int = 0,
-    @ColumnInfo(name = "fecha_registro") val fechaRegistro: String = ""
+    @ColumnInfo(name = "fecha_registro") val fechaRegistro: String = "",
+    @ColumnInfo(name = "genero") val genero: String = ""
 )

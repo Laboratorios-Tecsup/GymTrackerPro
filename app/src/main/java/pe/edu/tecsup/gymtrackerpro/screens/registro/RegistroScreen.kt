@@ -36,6 +36,7 @@ fun RegistroScreen(
     var email by remember { mutableStateOf("") }
     var edad by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var genero by remember { mutableStateOf("") }
 
     // Estados para errores
     var errorNombre by remember { mutableStateOf<String?>(null) }
@@ -43,6 +44,7 @@ fun RegistroScreen(
     var errorEmail by remember { mutableStateOf<String?>(null) }
     var errorEdad by remember { mutableStateOf<String?>(null) }
     var errorPassword by remember { mutableStateOf<String?>(null) }
+    var errorGenero by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -164,6 +166,21 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Gnero
+            OutlinedTextField(
+                value = genero,
+                onValueChange = {
+                    genero = it
+                    errorGenero = if (it.isBlank()) "El genero es obligatorio" else null
+                },
+                label = { Text("Escribe tu genero") },
+                isError = errorGenero != null,
+                supportingText = { errorGenero?.let { Text(it) } },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             // Password
             OutlinedTextField(
                 value = password,
@@ -211,6 +228,7 @@ fun RegistroScreen(
                                     nombreCompleto = nombreCompleto.trim(),
                                     email = email.trim(),
                                     edad = edad.toInt(),
+                                    genero = genero.trim(),
                                     fechaRegistro = SimpleDateFormat(
                                         "yyyy-MM-dd",
                                         Locale.getDefault()
