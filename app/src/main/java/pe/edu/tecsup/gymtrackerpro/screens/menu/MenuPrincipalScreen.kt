@@ -1,16 +1,22 @@
 package pe.edu.tecsup.gymtrackerpro.screens.menu
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -21,11 +27,11 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import pe.edu.tecsup.gymtrackerpro.data.local.database.AppDatabase
 import pe.edu.tecsup.gymtrackerpro.navigation.Routes
+import pe.edu.tecsup.gymtrackerpro.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MenuPrincipalScreen(navController: NavController, usuarioId: Int) {
-
     val context = LocalContext.current
     val db = AppDatabase.getDatabase(context)
     val scope = rememberCoroutineScope()
@@ -33,250 +39,231 @@ fun MenuPrincipalScreen(navController: NavController, usuarioId: Int) {
 
     var nombreCompleto by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var totalRutinas by remember { mutableStateOf(0) }
 
-    // Cargar datos del usuario
     LaunchedEffect(usuarioId) {
         val usuario = db.usuarioDao().buscarPorId(usuarioId)
-        nombreCompleto = usuario?.nombreCompleto ?: ""
+        nombreCompleto = usuario?.nombreCompleto ?: "Atleta"
         email = usuario?.email ?: ""
+        db.rutinaDao().listarRutinasPorUsuario(usuarioId).collect {
+            totalRutinas = it.size
+        }
     }
 
-    // Iniciales del usuario para el avatar
-    val iniciales = nombreCompleto
-        .split(" ")
-        .take(2)
-        .mapNotNull { it.firstOrNull()?.toString() }
-        .joinToString("")
-        .uppercase()
+    val iniciales = nombreCompleto.split(" ").filter { it.isNotBlank() }.take(2).mapNotNull { it.firstOrNull()?.toString() }.joinToString("").uppercase()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet {
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Avatar con iniciales
+            ModalDrawerSheet(
+                drawerContainerColor = MaterialTheme.colorScheme.surface,
+                drawerShape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp)
+            ) {
                 Box(
                     modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
+                            )
+                        )
+                        .padding(24.dp)
                 ) {
-                    Text(
-                        text = iniciales,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
+                    Column {
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(CircleShape)
+                                .background(White.copy(alpha = 0.3f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = iniciales, color = White, style = MaterialTheme.typography.headlineLarge)
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(text = nombreCompleto, style = MaterialTheme.typography.titleLarge, color = White)
+                        Text(text = email, style = MaterialTheme.typography.bodyMedium, color = White.copy(alpha = 0.8f))
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = nombreCompleto,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-                Text(
-                    text = email,
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-
                 Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Items del Drawer
-                NavigationDrawerItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                    label = { Text("Inicio") },
-                    selected = true,
-                    onClick = { scope.launch { drawerState.close() } }
-                )
-
-                NavigationDrawerItem(
-                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                    label = { Text("Agregar rutina") },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate(Routes.agregarRutina(usuarioId))
-                    }
-                )
-
-                NavigationDrawerItem(
-                    icon = { Icon(Icons.Default.List, contentDescription = null) },
-                    label = { Text("Mis rutinas") },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate(Routes.listaRutinas(usuarioId))
-                    }
-                )
-
-                NavigationDrawerItem(
-                    icon = { Icon(Icons.Default.Person, contentDescription = null) },
-                    label = { Text("Mi perfil") },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate(Routes.perfilUsuario(usuarioId))
-                    }
-                )
-
+                DrawerItem(Icons.Default.Dashboard, "Dashboard", true) { scope.launch { drawerState.close() } }
+                DrawerItem(Icons.Default.AddCircle, "Nueva Rutina", false) {
+                    scope.launch { drawerState.close() }
+                    navController.navigate(Routes.agregarRutina(usuarioId))
+                }
+                DrawerItem(Icons.Default.History, "Mis Rutinas", false) {
+                    scope.launch { drawerState.close() }
+                    navController.navigate(Routes.listaRutinas(usuarioId))
+                }
+                DrawerItem(Icons.Default.AccountCircle, "Perfil", false) {
+                    scope.launch { drawerState.close() }
+                    navController.navigate(Routes.perfilUsuario(usuarioId))
+                }
+                
                 Spacer(modifier = Modifier.weight(1f))
-                HorizontalDivider()
-
-                NavigationDrawerItem(
-                    icon = { Icon(Icons.Default.ExitToApp, contentDescription = null) },
-                    label = { Text("Cerrar sesión") },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate(Routes.LOGIN) {
-                            popUpTo(Routes.LOGIN) { inclusive = true }
-                        }
-                    }
-                )
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                DrawerItem(Icons.AutoMirrored.Filled.Logout, "Cerrar Sesión", false) {
+                    navController.navigate(Routes.LOGIN) { popUpTo(Routes.LOGIN) { inclusive = true } }
+                }
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
     ) {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text("GymTracker Pro") },
+                CenterAlignedTopAppBar(
+                    title = { Text("GYMTRACKER PRO", style = MaterialTheme.typography.headlineLarge.copy(letterSpacing = 2.sp)) },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Abrir menú")
+                            Icon(Icons.Default.Menu, contentDescription = null)
                         }
                     },
                     actions = {
                         IconButton(onClick = { }) {
-                            Icon(
-                                Icons.Default.Notifications,
-                                contentDescription = "Notificaciones",
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
+                            Icon(Icons.Default.NotificationsNone, contentDescription = null)
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        titleContentColor = MaterialTheme.colorScheme.primary
                     )
                 )
             }
-        ) { paddingValues ->
-            Column(
+        ) { padding ->
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(16.dp)
+                    .padding(padding)
+                    .padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(text = "Hola,", fontSize = 16.sp)
-                Text(
-                    text = nombreCompleto,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Grid 2x2 de tarjetas
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    MenuCard(
-                        icon = Icons.Default.Add,
-                        titulo = "Agregar rutina",
-                        color = Color(0xFFE3F2FD),
-                        iconColor = Color(0xFF1565C0),
-                        modifier = Modifier.weight(1f),
-                        onClick = { navController.navigate(Routes.agregarRutina(usuarioId)) }
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    MenuCard(
-                        icon = Icons.Default.List,
-                        titulo = "Mis rutinas",
-                        color = Color(0xFFE8F5E9),
-                        iconColor = Color(0xFF2E7D32),
-                        modifier = Modifier.weight(1f),
-                        onClick = { navController.navigate(Routes.listaRutinas(usuarioId)) }
-                    )
+                item {
+                    Column {
+                        Text(text = "Bienvenido de nuevo,", style = MaterialTheme.typography.bodyLarge, color = MediumGrey)
+                        Text(text = nombreCompleto, style = MaterialTheme.typography.displaySmall, color = PremiumBlack)
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    MenuCard(
-                        icon = Icons.Default.Person,
-                        titulo = "Mi perfil",
-                        color = Color(0xFFFFF3E0),
-                        iconColor = Color(0xFFE65100),
-                        modifier = Modifier.weight(1f),
-                        onClick = { navController.navigate(Routes.perfilUsuario(usuarioId)) }
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    MenuCard(
-                        icon = Icons.Default.ExitToApp,
-                        titulo = "Cerrar sesión",
-                        color = Color(0xFFFFEBEE),
-                        iconColor = Color(0xFFC62828),
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            navController.navigate(Routes.LOGIN) {
-                                popUpTo(Routes.LOGIN) { inclusive = true }
-                            }
-                        }
-                    )
+                item {
+                    SummaryCard(totalRutinas)
                 }
+
+                item {
+                    Text(text = "Acciones Rápidas", style = MaterialTheme.typography.headlineLarge)
+                }
+
+                item {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        DashboardActionCard(
+                            title = "Añadir Rutina",
+                            icon = Icons.Default.Add,
+                            color = PrimaryBlue,
+                            modifier = Modifier.weight(1f)
+                        ) { navController.navigate(Routes.agregarRutina(usuarioId)) }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        DashboardActionCard(
+                            title = "Ver Historial",
+                            icon = Icons.Default.History,
+                            color = SuccessGreen,
+                            modifier = Modifier.weight(1f)
+                        ) { navController.navigate(Routes.listaRutinas(usuarioId)) }
+                    }
+                }
+
+                item {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        DashboardActionCard(
+                            title = "Mi Perfil",
+                            icon = Icons.Default.Person,
+                            color = WarningOrange,
+                            modifier = Modifier.weight(1f)
+                        ) { navController.navigate(Routes.perfilUsuario(usuarioId)) }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        DashboardActionCard(
+                            title = "Configuración",
+                            icon = Icons.Default.Settings,
+                            color = MediumGrey,
+                            modifier = Modifier.weight(1f)
+                        ) { }
+                    }
+                }
+                
+                item { Spacer(modifier = Modifier.height(20.dp)) }
             }
         }
     }
 }
 
 @Composable
-fun MenuCard(
-    icon: ImageVector,
-    titulo: String,
-    color: Color,
-    iconColor: Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Card(
+fun DrawerItem(icon: ImageVector, label: String, selected: Boolean, onClick: () -> Unit) {
+    NavigationDrawerItem(
+        icon = { Icon(icon, contentDescription = null) },
+        label = { Text(label, style = MaterialTheme.typography.labelLarge) },
+        selected = selected,
         onClick = onClick,
-        modifier = modifier.aspectRatio(1f),
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = color),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = NavigationDrawerItemDefaults.colors(
+            selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+            selectedIconColor = MaterialTheme.colorScheme.primary,
+            selectedTextColor = MaterialTheme.colorScheme.primary
+        )
+    )
+}
+
+@Composable
+fun SummaryCard(count: Int) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.primary,
+        shadowElevation = 8.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(24.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = "Progreso Actual", color = White.copy(alpha = 0.8f), style = MaterialTheme.typography.bodyMedium)
+                Text(text = "$count Rutinas", color = White, style = MaterialTheme.typography.displayMedium)
+                Text(text = "¡Sigue así, campeón!", color = White.copy(alpha = 0.9f), style = MaterialTheme.typography.bodySmall)
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                contentDescription = null,
+                tint = White,
+                modifier = Modifier.size(48.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun DashboardActionCard(title: String, icon: ImageVector, color: Color, modifier: Modifier, onClick: () -> Unit) {
+    Surface(
+        modifier = modifier
+            .height(120.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(24.dp),
+        color = color.copy(alpha = 0.1f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.2f))
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.Start
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(36.dp),
-                tint = iconColor
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = titulo,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                color = iconColor
-            )
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(color.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(imageVector = icon, contentDescription = null, tint = color)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(text = title, style = MaterialTheme.typography.titleLarge.copy(fontSize = 14.sp), color = PremiumBlack)
         }
     }
 }

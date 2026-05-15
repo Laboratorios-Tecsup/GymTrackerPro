@@ -14,7 +14,7 @@ import pe.edu.tecsup.gymtrackerpro.data.local.entity.Usuario
         Usuario::class,
         Rutina::class
     ],
-    version = 1,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -36,7 +36,8 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "gymtracker_db"
-                ).build()
+                ).fallbackToDestructiveMigration()
+                    .build()
 
                 INSTANCE = instance
 

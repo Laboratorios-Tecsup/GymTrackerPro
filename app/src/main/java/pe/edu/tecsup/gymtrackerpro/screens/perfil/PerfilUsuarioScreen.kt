@@ -1,16 +1,22 @@
 package pe.edu.tecsup.gymtrackerpro.screens.perfil
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -20,11 +26,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import pe.edu.tecsup.gymtrackerpro.data.local.database.AppDatabase
 import pe.edu.tecsup.gymtrackerpro.navigation.Routes
+import pe.edu.tecsup.gymtrackerpro.ui.theme.*
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PerfilUsuarioScreen(navController: NavController, usuarioId: Int) {
-
     val context = LocalContext.current
     val db = AppDatabase.getDatabase(context)
 
@@ -36,7 +43,6 @@ fun PerfilUsuarioScreen(navController: NavController, usuarioId: Int) {
     var totalRutinas by remember { mutableStateOf(0L) }
     var volumenTotal by remember { mutableStateOf(0.0) }
 
-    // Cargar datos del usuario y estadísticas
     LaunchedEffect(usuarioId) {
         val usuario = db.usuarioDao().buscarPorId(usuarioId)
         usuario?.let {
@@ -46,218 +52,181 @@ fun PerfilUsuarioScreen(navController: NavController, usuarioId: Int) {
             edad = it.edad
             fechaRegistro = it.fechaRegistro
         }
-        // Corregido: Nombres de funciones coinciden con RutinaDao
         totalRutinas = db.rutinaDao().contarRutinasPorUsuario(usuarioId).toLong()
         volumenTotal = db.rutinaDao().volumenTotal(usuarioId) ?: 0.0
     }
 
-    // Iniciales para el avatar
     val iniciales = if (nombreCompleto.isNotBlank()) {
-        nombreCompleto
-            .split(" ")
-            .filter { it.isNotBlank() }
-            .take(2)
-            .mapNotNull { it.firstOrNull()?.toString() }
-            .joinToString("")
-            .uppercase()
+        nombreCompleto.split(" ").filter { it.isNotBlank() }.take(2).mapNotNull { it.firstOrNull()?.toString() }.joinToString("").uppercase()
     } else "?"
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mi perfil", fontWeight = FontWeight.Bold) },
+                title = { Text("Mi Perfil Elite", style = MaterialTheme.typography.headlineLarge) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = White)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    titleContentColor = White
                 )
             )
         }
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.background)
+                    )
+                )
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Avatar con iniciales
-            Box(
+            Column(
                 modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFE3F2FD)),
-                contentAlignment = Alignment.Center
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = iniciales,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1565C0)
-                )
-            }
+                // Profile Header Card
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 4.dp,
+                    shadowElevation = 8.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(PrimaryBlue, AccentBlue)
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = iniciales,
+                                style = MaterialTheme.typography.displayMedium,
+                                color = White
+                            )
+                        }
 
-            Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = nombreCompleto,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "@$nombreUsuario",
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
+                        Text(
+                            text = nombreCompleto,
+                            style = MaterialTheme.typography.displaySmall,
+                            color = PremiumBlack
+                        )
+                        Text(
+                            text = "@$nombreUsuario",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MediumGrey
+                        )
 
-            Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
 
-            // Estadísticas
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                EstadisticaCard(
-                    valor = totalRutinas.toString(),
-                    etiqueta = "Rutinas",
-                    modifier = Modifier.weight(1f)
-                )
-                EstadisticaCard(
-                    valor = String.format("%.0f", volumenTotal),
-                    etiqueta = "kg totales",
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Información del usuario
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    InfoItem(
-                        icon = Icons.Default.Email,
-                        etiqueta = "Email",
-                        valor = email
-                    )
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                    InfoItem(
-                        icon = Icons.Default.Person,
-                        etiqueta = "Edad",
-                        valor = "$edad años"
-                    )
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                    InfoItem(
-                        icon = Icons.Default.DateRange,
-                        etiqueta = "Miembro desde",
-                        valor = fechaRegistro
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Botón cerrar sesión
-            OutlinedButton(
-                onClick = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            StatMiniCard("Rutinas", totalRutinas.toString(), Icons.Default.FitnessCenter)
+                            StatMiniCard("Volumen", String.format(Locale.getDefault(), "%.0f kg", volumenTotal), Icons.Default.Scale)
+                        }
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color.Red
-                ),
-                border = ButtonDefaults.outlinedButtonBorder.copy(
-                    brush = androidx.compose.ui.graphics.SolidColor(Color.Red)
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(
-                    Icons.Default.ExitToApp,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Information Section
+                Text(
+                    text = "Información Personal",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = White,
+                    modifier = Modifier.align(Alignment.Start).padding(bottom = 12.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Cerrar sesión", fontWeight = FontWeight.Bold)
+
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 2.dp
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        ProfileInfoItem(Icons.Default.Email, "Email", email)
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = LightGrey)
+                        ProfileInfoItem(Icons.Default.Cake, "Edad", "$edad años")
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = LightGrey)
+                        ProfileInfoItem(Icons.Default.CalendarToday, "Miembro desde", fechaRegistro)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Button(
+                    onClick = {
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRed.copy(alpha = 0.1f), contentColor = ErrorRed),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, ErrorRed.copy(alpha = 0.5f))
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("Cerrar Sesión", style = MaterialTheme.typography.titleLarge)
+                }
+                
+                Spacer(modifier = Modifier.height(32.dp))
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
 
 @Composable
-fun EstadisticaCard(
-    valor: String,
-    etiqueta: String,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = valor,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = etiqueta,
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
-        }
+fun StatMiniCard(label: String, value: String, icon: ImageVector) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(icon, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(24.dp))
+        Text(text = value, style = MaterialTheme.typography.headlineLarge, color = PremiumBlack)
+        Text(text = label, style = MaterialTheme.typography.bodySmall, color = MediumGrey)
     }
 }
 
 @Composable
-fun InfoItem(
-    icon: ImageVector,
-    etiqueta: String,
-    valor: String
-) {
+fun ProfileInfoItem(icon: ImageVector, label: String, value: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = Color.Gray,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = etiqueta,
-            color = Color.Gray,
-            fontSize = 14.sp,
-            modifier = Modifier.weight(1f)
-        )
-        Text(
-            text = valor,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
-        )
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(PrimaryBlue.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(20.dp))
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column {
+            Text(text = label, style = MaterialTheme.typography.labelLarge, color = MediumGrey)
+            Text(text = value, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold), color = PremiumBlack)
+        }
     }
 }

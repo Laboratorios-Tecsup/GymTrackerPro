@@ -1,15 +1,21 @@
 package pe.edu.tecsup.gymtrackerpro.screens.rutinas
 
+import androidx.compose.animation.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -20,124 +26,93 @@ import kotlinx.coroutines.launch
 import pe.edu.tecsup.gymtrackerpro.data.local.database.AppDatabase
 import pe.edu.tecsup.gymtrackerpro.data.local.entity.Rutina
 import pe.edu.tecsup.gymtrackerpro.navigation.Routes
+import pe.edu.tecsup.gymtrackerpro.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListaRutinasScreen(navController: NavController, usuarioId: Int) {
-
     val context = LocalContext.current
     val db = AppDatabase.getDatabase(context)
     val scope = rememberCoroutineScope()
 
-    // Corregido: Nombre de función coincide con RutinaDao
     val rutinas by db.rutinaDao().listarRutinasPorUsuario(usuarioId).collectAsState(initial = emptyList())
-
-    // Rutina seleccionada para eliminar
     var rutinaAEliminar by remember { mutableStateOf<Rutina?>(null) }
 
-    // AlertDialog de confirmación de eliminación
-    rutinaAEliminar?.let { rutina ->
+    if (rutinaAEliminar != null) {
         AlertDialog(
             onDismissRequest = { rutinaAEliminar = null },
-            title = { Text("Eliminar rutina") },
-            text = { Text("¿Estás seguro de eliminar '${rutina.ejercicio}'?") },
+            title = { Text("¿Eliminar Rutina?", style = MaterialTheme.typography.headlineLarge) },
+            text = { Text("Esta acción no se puede deshacer.", style = MaterialTheme.typography.bodyMedium) },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         scope.launch {
-                            db.rutinaDao().eliminar(rutina)
+                            rutinaAEliminar?.let { db.rutinaDao().eliminar(it) }
                             rutinaAEliminar = null
                         }
-                    }
-                ) {
-                    Text("Eliminar", color = Color.Red)
-                }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRed)
+                ) { Text("Eliminar") }
             },
             dismissButton = {
-                TextButton(onClick = { rutinaAEliminar = null }) {
-                    Text("Cancelar")
-                }
-            }
+                TextButton(onClick = { rutinaAEliminar = null }) { Text("Cancelar") }
+            },
+            shape = RoundedCornerShape(24.dp),
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mis rutinas", fontWeight = FontWeight.Bold) },
+                title = { Text("Historial de Rutinas", style = MaterialTheme.typography.headlineLarge) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { }) {
-                        Icon(Icons.Default.Search, contentDescription = "Buscar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = White)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    titleContentColor = White
                 )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate(Routes.agregarRutina(usuarioId)) },
-                containerColor = MaterialTheme.colorScheme.primary
+                containerColor = MaterialTheme.colorScheme.primary,
+                shape = RoundedCornerShape(16.dp),
+                elevation = FloatingActionButtonDefaults.elevation(8.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Agregar rutina", tint = Color.White)
+                Icon(Icons.Default.Add, contentDescription = "Agregar", tint = White, modifier = Modifier.size(32.dp))
             }
         }
     ) { paddingValues ->
-        if (rutinas.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        Icons.Default.List,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = Color.LightGray
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f), MaterialTheme.colorScheme.background)
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "No tienes rutinas aún",
-                        color = Color.Gray,
-                        fontSize = 16.sp
-                    )
-                    Text(
-                        text = "Toca + para agregar una",
-                        color = Color.LightGray,
-                        fontSize = 14.sp
-                    )
-                }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(vertical = 16.dp)
-            ) {
-                items(rutinas) { rutina ->
-                    RutinaCard(
-                        rutina = rutina, // Corregido: se pasa el item individual
-                        onEditar = {
-                            navController.navigate(Routes.detalleRutina(rutina.id))
-                        },
-                        onEliminar = {
-                            rutinaAEliminar = rutina // Corregido: se asigna el item individual
-                        }
-                    )
+                )
+        ) {
+            if (rutinas.isEmpty()) {
+                EmptyState()
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(rutinas) { rutina ->
+                        PremiumRutinaCard(
+                            rutina = rutina,
+                            onEdit = { navController.navigate(Routes.detalleRutina(rutina.id)) },
+                            onDelete = { rutinaAEliminar = rutina }
+                        )
+                    }
                 }
             }
         }
@@ -145,90 +120,93 @@ fun ListaRutinasScreen(navController: NavController, usuarioId: Int) {
 }
 
 @Composable
-fun RutinaCard(
-    rutina: Rutina,
-    onEditar: () -> Unit,
-    onEliminar: () -> Unit
-) {
-    // Color por grupo muscular
-    val colorGrupo = when (rutina.grupoMuscular.lowercase()) {
-        "pecho" -> Color(0xFFE3F2FD) to Color(0xFF1565C0)
-        "espalda" -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
-        "hombros" -> Color(0xFFFFF3E0) to Color(0xFFE65100)
-        "bíceps", "biceps" -> Color(0xFFF3E5F5) to Color(0xFF6A1B9A)
-        "tríceps", "triceps" -> Color(0xFFE0F7FA) to Color(0xFF00695C)
-        "piernas", "pierna" -> Color(0xFFE8F5E9) to Color(0xFF1B5E20)
-        "abdomen" -> Color(0xFFFFF8E1) to Color(0xFFF57F17)
-        "glúteos", "gluteos" -> Color(0xFFFCE4EC) to Color(0xFF880E4F)
-        else -> Color(0xFFF5F5F5) to Color(0xFF424242)
+fun EmptyState() {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .clip(CircleShape)
+                .background(MediumGrey.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(64.dp), tint = MediumGrey)
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        Text("No hay registros aún", style = MaterialTheme.typography.headlineLarge, color = PremiumBlack)
+        Text("Tu viaje fitness comienza hoy", style = MaterialTheme.typography.bodyMedium, color = MediumGrey)
+    }
+}
+
+@Composable
+fun PremiumRutinaCard(rutina: Rutina, onEdit: () -> Unit, onDelete: () -> Unit) {
+    val accentColor = when (rutina.grupoMuscular.lowercase()) {
+        "pecho" -> Color(0xFF3B82F6)
+        "espalda" -> Color(0xFF10B981)
+        "piernas" -> Color(0xFFF59E0B)
+        "hombros" -> Color(0xFF8B5CF6)
+        else -> MaterialTheme.colorScheme.primary
     }
 
-    Card(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 2.dp,
+        shadowElevation = 4.dp
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = rutina.ejercicio,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
-                Row {
-                    IconButton(
-                        onClick = onEditar,
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Edit,
-                            contentDescription = "Editar",
-                            tint = Color(0xFF1565C0),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    IconButton(
-                        onClick = onEliminar,
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Eliminar",
-                            tint = Color.Red,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(accentColor.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.FitnessCenter, contentDescription = null, tint = accentColor)
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = rutina.ejercicio, style = MaterialTheme.typography.titleLarge, color = PremiumBlack)
+                    Text(text = rutina.grupoMuscular, style = MaterialTheme.typography.labelLarge, color = accentColor)
+                }
+                IconButton(onClick = onEdit) { Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MediumGrey) }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = MediumGrey.copy(alpha = 0.1f))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                StatItem(Icons.Default.Refresh, "${rutina.series} series")
+                StatItem(Icons.Default.Repeat, "${rutina.repeticiones} reps")
+                StatItem(Icons.Default.Scale, "${rutina.pesoKg} kg")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Event, contentDescription = null, modifier = Modifier.size(14.dp), tint = MediumGrey)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(text = rutina.fecha, style = MaterialTheme.typography.bodySmall, color = MediumGrey)
+                Spacer(modifier = Modifier.weight(1f))
+                TextButton(onClick = onDelete) {
+                    Text("Eliminar", color = ErrorRed, style = MaterialTheme.typography.labelLarge)
                 }
             }
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // Badge grupo muscular
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = colorGrupo.first
-            ) {
-                Text(
-                    text = rutina.grupoMuscular,
-                    color = colorGrupo.second,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "${rutina.series} series × ${rutina.repeticiones} reps · ${rutina.pesoKg} kg · ${rutina.fecha}",
-                fontSize = 13.sp,
-                color = Color.Gray
-            )
         }
+    }
+}
+
+@Composable
+fun StatItem(icon: androidx.compose.ui.graphics.vector.ImageVector, value: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = value, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), color = PremiumBlack)
     }
 }
