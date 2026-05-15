@@ -50,7 +50,9 @@ fun MenuPrincipalScreen(navController: NavController, usuarioId: Int) {
         }
     }
 
-    val iniciales = nombreCompleto.split(" ").filter { it.isNotBlank() }.take(2).mapNotNull { it.firstOrNull()?.toString() }.joinToString("").uppercase()
+    val iniciales = if (nombreCompleto.isNotBlank()) {
+        nombreCompleto.split(" ").filter { it.isNotBlank() }.take(2).mapNotNull { it.firstOrNull()?.toString() }.joinToString("").uppercase()
+    } else "?"
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -74,14 +76,14 @@ fun MenuPrincipalScreen(navController: NavController, usuarioId: Int) {
                             modifier = Modifier
                                 .size(64.dp)
                                 .clip(CircleShape)
-                                .background(White.copy(alpha = 0.3f)),
+                                .background(Color.White.copy(alpha = 0.3f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(text = iniciales, color = White, style = MaterialTheme.typography.headlineLarge)
+                            Text(text = iniciales, color = Color.White, style = MaterialTheme.typography.headlineLarge)
                         }
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text(text = nombreCompleto, style = MaterialTheme.typography.titleLarge, color = White)
-                        Text(text = email, style = MaterialTheme.typography.bodyMedium, color = White.copy(alpha = 0.8f))
+                        Text(text = nombreCompleto, style = MaterialTheme.typography.titleLarge, color = Color.White)
+                        Text(text = email, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
                     }
                 }
 
@@ -139,8 +141,8 @@ fun MenuPrincipalScreen(navController: NavController, usuarioId: Int) {
             ) {
                 item {
                     Column {
-                        Text(text = "Bienvenido de nuevo,", style = MaterialTheme.typography.bodyLarge, color = MediumGrey)
-                        Text(text = nombreCompleto, style = MaterialTheme.typography.displaySmall, color = PremiumBlack)
+                        Text(text = "Bienvenido de nuevo,", style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
+                        Text(text = nombreCompleto, style = MaterialTheme.typography.displaySmall, color = Color.Black)
                     }
                 }
 
@@ -157,14 +159,14 @@ fun MenuPrincipalScreen(navController: NavController, usuarioId: Int) {
                         DashboardActionCard(
                             title = "Añadir Rutina",
                             icon = Icons.Default.Add,
-                            color = PrimaryBlue,
+                            color = Color(0xFF2E5A97),
                             modifier = Modifier.weight(1f)
                         ) { navController.navigate(Routes.agregarRutina(usuarioId)) }
                         Spacer(modifier = Modifier.width(16.dp))
                         DashboardActionCard(
                             title = "Ver Historial",
                             icon = Icons.Default.History,
-                            color = SuccessGreen,
+                            color = Color(0xFF4CAF50),
                             modifier = Modifier.weight(1f)
                         ) { navController.navigate(Routes.listaRutinas(usuarioId)) }
                     }
@@ -175,16 +177,21 @@ fun MenuPrincipalScreen(navController: NavController, usuarioId: Int) {
                         DashboardActionCard(
                             title = "Mi Perfil",
                             icon = Icons.Default.Person,
-                            color = WarningOrange,
+                            color = Color(0xFFFFA000),
                             modifier = Modifier.weight(1f)
                         ) { navController.navigate(Routes.perfilUsuario(usuarioId)) }
                         Spacer(modifier = Modifier.width(16.dp))
+                        // Botón actualizado de Configuración a Cerrar Sesión
                         DashboardActionCard(
-                            title = "Configuración",
-                            icon = Icons.Default.Settings,
-                            color = MediumGrey,
+                            title = "Cerrar Sesión",
+                            icon = Icons.AutoMirrored.Filled.Logout,
+                            color = Color(0xFFE53935),
                             modifier = Modifier.weight(1f)
-                        ) { }
+                        ) {
+                            navController.navigate(Routes.LOGIN) {
+                                popUpTo(Routes.LOGIN) { inclusive = true }
+                            }
+                        }
                     }
                 }
                 
@@ -224,14 +231,14 @@ fun SummaryCard(count: Int) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = "Progreso Actual", color = White.copy(alpha = 0.8f), style = MaterialTheme.typography.bodyMedium)
-                Text(text = "$count Rutinas", color = White, style = MaterialTheme.typography.displayMedium)
-                Text(text = "¡Sigue así, campeón!", color = White.copy(alpha = 0.9f), style = MaterialTheme.typography.bodySmall)
+                Text(text = "Progreso Actual", color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.bodyMedium)
+                Text(text = "$count Rutinas", color = Color.White, style = MaterialTheme.typography.displayMedium)
+                Text(text = "¡Sigue así, campeón!", color = Color.White.copy(alpha = 0.9f), style = MaterialTheme.typography.bodySmall)
             }
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                 contentDescription = null,
-                tint = White,
+                tint = Color.White,
                 modifier = Modifier.size(48.dp)
             )
         }
@@ -263,7 +270,7 @@ fun DashboardActionCard(title: String, icon: ImageVector, color: Color, modifier
                 Icon(imageVector = icon, contentDescription = null, tint = color)
             }
             Spacer(modifier = Modifier.height(12.dp))
-            Text(text = title, style = MaterialTheme.typography.titleLarge.copy(fontSize = 14.sp), color = PremiumBlack)
+            Text(text = title, style = MaterialTheme.typography.titleLarge.copy(fontSize = 14.sp), color = Color.Black)
         }
     }
 }
