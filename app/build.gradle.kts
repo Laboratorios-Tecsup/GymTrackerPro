@@ -7,9 +7,8 @@ plugins {
 
 android {
     namespace = "pe.edu.tecsup.gymtrackerpro"
-    compileSdk {
-        version = release(36)
-    }
+    // Actualizado a 36 para soportar las librerías 1.18.0+
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "pe.edu.tecsup.gymtrackerpro"
@@ -43,9 +42,9 @@ android {
 }
 
 dependencies {
-    implementation("androidx.room:room-ktx:2.7.0")
-    implementation("androidx.room:room-runtime:2.7.0")
-    ksp("androidx.room:room-compiler:2.7.0")
+    implementation("androidx.room:room-ktx:2.6.1")
+    implementation("androidx.room:room-runtime:2.6.1")
+    ksp("androidx.room:room-compiler:2.6.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
     implementation("androidx.navigation:navigation-compose:2.8.0")
 
@@ -57,6 +56,10 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    
+    // Iconos extendidos para FitnessCenter
+    implementation("androidx.compose.material:material-icons-extended")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
