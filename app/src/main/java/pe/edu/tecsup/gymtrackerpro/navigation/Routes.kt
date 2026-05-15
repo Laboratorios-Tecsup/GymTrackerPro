@@ -9,6 +9,8 @@ object Routes {
     const val LISTA_RUTINAS = "lista_rutinas/{usuarioId}"
     const val DETALLE_RUTINA = "detalle_rutina/{rutinaId}"
     const val PERFIL_USUARIO = "perfil_usuario/{usuarioId}"
+   // nueva pantalla
+   // const val HISTORIAL = "historial/{usuarioId}"
 
     // Funciones para construir las rutas con los argumentos
     fun menuPrincipal(usuarioId: Int) = "menu_principal/$usuarioId"
@@ -16,4 +18,6 @@ object Routes {
     fun listaRutinas(usuarioId: Int) = "lista_rutinas/$usuarioId"
     fun detalleRutina(rutinaId: Int) = "detalle_rutina/$rutinaId"
     fun perfilUsuario(usuarioId: Int) = "perfil_usuario/$usuarioId"
+    // nueva pantalla
+    // fun historial(usuarioId: Int) = "historial/$usuarioId"
 }

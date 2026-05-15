@@ -76,5 +76,7 @@ fun AppNavigation() {
             val usuarioId = backStackEntry.arguments?.getInt("usuarioId") ?: 0
             PerfilUsuarioScreen(navController = navController, usuarioId = usuarioId)
         }
+
+        //
     }
 }

@@ -31,4 +31,9 @@ interface RutinaDao {
 
     @Query("SELECT SUM(peso_kg * series * repeticiones) FROM Rutina WHERE usuario_id = :usuarioId")
     suspend fun volumenTotal(usuarioId: Int): Double?
+
+    // Agrega una query que busque rutinas por fecha exacta"
+   // @Query ("SELECT * FROM Rutina WHERE usuario_id = :usuarioId AND fecha = :fecha")
+   // suspend fun buscarPorFecha(usuarioId: Int, fecha: String): List<Rutina>
+
 }

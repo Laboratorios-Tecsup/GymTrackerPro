@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -39,21 +40,21 @@ fun AgregarRutinaScreen(navController: NavController, usuarioId: Int) {
     var series by remember { mutableStateOf("") }
     var repeticiones by remember { mutableStateOf("") }
     var pesoKg by remember { mutableStateOf("") }
-    
-    // Corregido: Ahora la fecha es un estado para poder cambiarla
     var fecha by remember { mutableStateOf(SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())) }
 
-    // Configuración del Selector de Fecha
-    val calendar = Calendar.getInstance()
-    val datePickerDialog = DatePickerDialog(
-        context,
-        { _, year, month, dayOfMonth ->
-            fecha = String.format("%02d/%02d/%04d", dayOfMonth, month + 1, year)
-        },
-        calendar.get(Calendar.YEAR),
-        calendar.get(Calendar.MONTH),
-        calendar.get(Calendar.DAY_OF_MONTH)
-    )
+    // Función para mostrar el selector de fecha (Corregido: No se recrea en cada recomposición)
+    fun mostrarDatePicker() {
+        val calendar = Calendar.getInstance()
+        DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                fecha = String.format("%02d/%02d/%04d", dayOfMonth, month + 1, year)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
 
     // Dropdown grupo muscular
     val grupos = listOf("Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps", "Piernas", "Abdomen", "Glúteos")
@@ -121,7 +122,7 @@ fun AgregarRutinaScreen(navController: NavController, usuarioId: Int) {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Grupo muscular - Dropdown
+            // Grupo muscular
             Text("Grupo muscular", fontWeight = FontWeight.Medium)
             ExposedDropdownMenuBox(
                 expanded = expandido,
@@ -132,12 +133,8 @@ fun AgregarRutinaScreen(navController: NavController, usuarioId: Int) {
                     onValueChange = {},
                     readOnly = true,
                     placeholder = { Text("Selecciona") },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandido)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandido) },
+                    modifier = Modifier.fillMaxWidth().menuAnchor()
                 )
                 ExposedDropdownMenu(
                     expanded = expandido,
@@ -155,7 +152,7 @@ fun AgregarRutinaScreen(navController: NavController, usuarioId: Int) {
                 }
             }
 
-            // Series y Repeticiones en la misma fila
+            // Series y Repeticiones
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -166,7 +163,6 @@ fun AgregarRutinaScreen(navController: NavController, usuarioId: Int) {
                         value = series,
                         onValueChange = { series = it },
                         placeholder = { Text("4") },
-                        singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -177,7 +173,6 @@ fun AgregarRutinaScreen(navController: NavController, usuarioId: Int) {
                         value = repeticiones,
                         onValueChange = { repeticiones = it },
                         placeholder = { Text("12") },
-                        singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -190,19 +185,17 @@ fun AgregarRutinaScreen(navController: NavController, usuarioId: Int) {
                 value = pesoKg,
                 onValueChange = { pesoKg = it },
                 placeholder = { Text("60.5") },
-                singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Fecha (Corregido: Ahora se puede cambiar al hacer clic)
+            // Fecha (Corregido)
             Text("Fecha", fontWeight = FontWeight.Medium)
-            Box(modifier = Modifier.fillMaxWidth().clickable { datePickerDialog.show() }) {
+            Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     value = fecha,
                     onValueChange = {},
                     readOnly = true,
-                    enabled = false, // Deshabilitamos la escritura directa pero el Box captura el clic
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
                         Icon(Icons.Default.DateRange, contentDescription = "Seleccionar fecha")
@@ -213,11 +206,16 @@ fun AgregarRutinaScreen(navController: NavController, usuarioId: Int) {
                         disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 )
+                // Capa invisible para detectar clics de forma fiable
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { mostrarDatePicker() }
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Botón guardar
             Button(
                 onClick = {
                     scope.launch {
@@ -241,9 +239,8 @@ fun AgregarRutinaScreen(navController: NavController, usuarioId: Int) {
                         navController.popBackStack()
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                shape = RoundedCornerShape(8.dp)
             ) {
                 Text("Guardar rutina", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
